@@ -23,10 +23,13 @@ def scrape_news():
         soup = BeautifulSoup(resp.text, 'html.parser')
         news = []
         
-        for link in soup.find_all('a', class_='article-title'):
-            title = link.get_text(strip=True)
+        # 모든 <a> 태그를 찾되, href가 있고 텍스트가 있는 것만
+        for link in soup.find_all('a', href=True):
             href = link.get('href', '')
-            if href and title:
+            title = link.get_text(strip=True)
+            
+            # href와 title이 모두 있고, 너무 짧지 않은 것만
+            if href and title and len(title) > 5:
                 if not href.startswith('http'):
                     href = 'http://touraz.kr' + href if href.startswith('/') else 'http://touraz.kr/' + href
                 news.append({'title': title, 'link': href})
