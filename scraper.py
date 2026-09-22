@@ -24,7 +24,7 @@ def scrape_news():
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
         }
-        response = requests.get('http://touraz.kr/news', headers=headers, timeout=10)
+        response = requests.get('http://touraz.kr/news', headers=headers, timeout=5)
         response.encoding = 'utf-8'
         
         if response.status_code != 200:
