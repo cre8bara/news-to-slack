@@ -45,9 +45,9 @@ def format_notion_data(items):
         status = ""
         priority = ""
         
-        # 필드명: 설명
-        if '설명' in props and props['설명'].get('title'):
-            title = props['설명']['title'][0]['text']['content']
+        # 필드명: 업무 내용
+        if '업무 내용' in props and props['업무 내용'].get('title'):
+            title = props['업무 내용']['title'][0]['text']['content']
         
         # 필드명: 상태
         if '상태' in props and props['상태'].get('status'):
