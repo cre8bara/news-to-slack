@@ -50,13 +50,15 @@ def scrape_news():
                 
                 if title:
                     news_items.append({'title': title, 'link': link})
-                    print(f"✓ 뉴스 수집: {title[:50]}... | {link}")
+                    print(f"✓ 뉴스 수집: {title[:50]}...")
         
         print(f"\n✓ 총 수집된 뉴스: {len(news_items)}개")
         return news_items
     
     except Exception as e:
         print(f"Error: 뉴스 수집 실패 - {str(e)}")
+        import traceback
+        traceback.print_exc()
         return []
 
 def select_random_news(news_items, count=5):
@@ -81,7 +83,6 @@ def send_to_slack(news_items):
         # Slack 메시지 구성
         text = f"📰 *{today} 오늘이슈*\n\n"
         for i, news in enumerate(news_items, 1):
-            # 제목과 링크 형식
             text += f"{i}. {news['title']}\n{news['link']}\n\n"
         
         payload = {
@@ -106,6 +107,8 @@ def send_to_slack(news_items):
     
     except Exception as e:
         print(f"Error: Slack 전송 중 오류 - {str(e)}")
+        import traceback
+        traceback.print_exc()
         return False
 
 def main():
@@ -139,5 +142,4 @@ def main():
         sys.exit(1)
     print("=" * 50)
 
-if __name__ == "__main__":
-    main()
+if
