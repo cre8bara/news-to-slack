@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import requests
+from datetime import datetime, timedelta
 import os
 
 NOTION_API_TOKEN = os.environ.get('NOTION_API_TOKEN')
@@ -15,18 +16,42 @@ headers = {
 }
 
 response = requests.post(url, headers=headers, json={})
-print(f"Status: {response.status_code}")
-print(f"Response: {response.text}")
+data = response.json()
+items = data.get('results', [])
 
-if response.status_code == 200:
-    data = response.json()
-    items = data.get('results', [])
-    print(f"Found {len(items)} items")
+grouped = {'1순위': [], '2순위': [], '3순위': []}
+
+for item in items:
+    props = item.get('properties', {})
     
-    if items:
-        for item in items:
-            props = item.get('properties', {})
-            print(f"Fields: {list(props.keys())}")
-            break
-else:
-    print(f"Error: {response.status_code}")
+    title = ""
+    status = ""
+    priority = ""
+    
+    if '업무 내용' in props and props['업무 내용'].get('title'):
+        title = props['업무 내용']['title'][0]['text']['content']
+    
+    if '상태' in props and props['상태'].get('status'):
+        status = props['상태']['status']['name']
+    
+    if '우선순위' in props and props['우선순위'].get('select'):
+        priority = props['우선순위']['select']['name']
+    
+    if title and priority in grouped:
+        grouped[priority].append({'title': title, 'status': status})
+
+today = datetime.now()
+monday = today - timedelta(days=today.weekday())
+friday = monday + timedelta(days=4)
+
+text = f"*📊 주간업무 보고서 ({monday.strftime('%m.%d')} - {friday.strftime('%m.%d')})*\n\n"
+
+for priority in ['1순위', '2순위', '3순위']:
+    if grouped[priority]:
+        text += f"*【{priority}】*\n"
+        for item in grouped[priority]:
+            emoji = "✅" if item['status'] == '완료' else "🔄"
+            text += f"{emoji} {item['title']}\n"
+        text += "\n"
+
+requests.post(SLACK_WEBHOOK_URL, json={"text": text})
