@@ -23,52 +23,25 @@ def scrape_news():
         soup = BeautifulSoup(resp.text, 'html.parser')
         news = []
         
-        # 모든 <a> 태그를 찾되, href가 있고 텍스트가 있는 것만
-        for link in soup.find_all('a', href=True):
-            href = link.get('href', '')
-            title = link.get_text(strip=True)
-            
-            # href와 title이 모두 있고, 너무 짧지 않은 것만
-            if href and title and len(title) > 5:
-                if not href.startswith('http'):
-                    href = 'http://touraz.kr' + href if href.startswith('/') else 'http://touraz.kr/' + href
-                news.append({'title': title, 'link': href})
+        # <div class="ls-article"> 안의 링크만 찾기
+        for article_div in soup.find_all('div', class_='ls-article'):
+            link = article_div.find('a')
+            if link:
+                href = link.get('href', '')
+                title = link.get_text(strip=True)
+                
+                if href and title:
+                    if not href.startswith('http'):
+                        href = 'http://touraz.kr' + href if href.startswith('/') else 'http://touraz.kr/' + href
+                    news.append({'title': title, 'link': href})
         
         print(f"Collected: {len(news)} news")
         return news
     except Exception as e:
         print(f"Error: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return []
 
 def send_slack(items):
-    if not SLACK_WEBHOOK_URL:
-        print("No webhook URL")
-        return False
-    
-    if not items:
-        print("No news")
-        return False
-    
-    today = datetime.now().strftime('%Y-%m-%d')
-    text = f"📰 {today}\n\n"
-    for i, news in enumerate(items, 1):
-        text += f"{i}. {news['title']}\n{news['link']}\n\n"
-    
-    try:
-        resp = requests.post(SLACK_WEBHOOK_URL, json={"text": text}, timeout=5)
-        if resp.status_code == 200:
-            print("Slack OK")
-            return True
-        else:
-            print(f"Slack error: {resp.status_code}")
-            return False
-    except Exception as e:
-        print(f"Error: {str(e)}")
-        return False
-
-news = scrape_news()
-if news:
-    selected = random.sample(news, min(5, len(news)))
-    send_slack(selected)
-else:
-    sys.exit(1)
+    if not
