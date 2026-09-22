@@ -23,7 +23,7 @@ def scrape_news():
         soup = BeautifulSoup(resp.text, 'html.parser')
         news = []
         
-        for link in soup.find_all('a', class_='article'):
+        for link in soup.find_all('a', class_='article-title'):
             title = link.get_text(strip=True)
             href = link.get('href', '')
             if href and title:
