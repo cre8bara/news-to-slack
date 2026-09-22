@@ -2,12 +2,11 @@
 # -*- coding: utf-8 -*-
 
 import requests
-from datetime import datetime, timedelta
 import os
+import json
 
 NOTION_API_TOKEN = os.environ.get('NOTION_API_TOKEN')
 NOTION_DATABASE_ID = os.environ.get('NOTION_DATABASE_ID')
-SLACK_WEBHOOK_URL = os.environ.get('SLACK_WEBHOOK_URL_REPORT')
 
 url = f"https://api.notion.com/v1/databases/{NOTION_DATABASE_ID}/query"
 headers = {
@@ -17,40 +16,16 @@ headers = {
 
 response = requests.post(url, headers=headers, json={})
 data = response.json()
-items = data.get('results', [])
 
-grouped = {'1순위': [], '2순위': [], '3순위': []}
-
-for item in items:
-    props = item.get('properties', {})
-    title = ""
-    status = ""
-    priority = ""
+if 'results' in data and len(data['results']) > 0:
+    first_item = data['results'][0]
+    props = first_item.get('properties', {})
     
-    if '업무 내용' in props and props['업무 내용'].get('title'):
-        title = props['업무 내용']['title'][0]['text']['content']
+    print("=== FIELD NAMES ===")
+    for field_name in props.keys():
+        print(f"- {field_name}")
     
-    if '상태' in props and props['상태'].get('status'):
-        status = props['상태']['status']['name']
-    
-    if '우선순위' in props and props['우선순위'].get('select'):
-        priority = props['우선순위']['select']['name']
-    
-    if title and priority in grouped:
-        grouped[priority].append({'title': title, 'status': status})
-
-today = datetime.now()
-monday = today - timedelta(days=today.weekday())
-friday = monday + timedelta(days=4)
-
-text = f"*📊 주간업무 보고서 ({monday.strftime('%m.%d')} - {friday.strftime('%m.%d')})*\n\n"
-
-for priority in ['1순위', '2순위', '3순위']:
-    if grouped[priority]:
-        text += f"*【{priority}】*\n"
-        for item in grouped[priority]:
-            emoji = "✅" if item['status'] == '완료' else "🔄"
-            text += f"{emoji} {item['title']}\n"
-        text += "\n"
-
-requests.post(SLACK_WEBHOOK_URL, json={"text": text})
+    print("\n=== FIRST ITEM DATA ===")
+    print(json.dumps(data['results'][0], indent=2, ensure_ascii=False))
+else:
+    print("No items found!")
